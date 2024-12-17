@@ -76,3 +76,33 @@ class Student extends Person {
     this.#year = data.year;
   }
 }
+
+class Room {
+  #name = "";
+  #type = "Room";
+
+  constructor(name, type) {
+    this.#name = name; 
+    this.#type = type;
+  }
+
+  get name() {
+    return this.#name;
+  }
+
+  direSalle() {
+    return'Bonjour, vous avez cours dans la salle' + this.#name;
+  }
+
+  toJSON() {
+    return {
+      name: this.#name,
+      type: this.#type,
+    };
+  }
+
+  fromJSON(data) {
+    this.#name = data.name;
+  }
+
+}

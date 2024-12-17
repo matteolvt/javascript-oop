@@ -2,156 +2,430 @@
   <head>
     <meta charset="utf-8" />
     <style>
-      .professor {
-        font-weight: bold;
-      }
+      
+/* Global Styles */
+* {
+  background-color: whitesmoke;
+}
 
-      .student {
-        font-style: italic;
-      }
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  background-color: #fff;
+  color: #333;
+}
 
-      #liste {
-        display: flex;
-        flex-direction: column;
-      }
+button {
+  cursor: pointer;
+  padding: 6px 10px;
+  margin: 4px;
+  border: 1px solid #aaa;
+  border-radius: 4px;
+  font-size: 14px;
+  background-color: #fff;
+  color: #333;
+  transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+}
 
-      #liste > div {
-        display: grid;
-        grid-template-columns: 3fr 1fr 1fr;
-        grid-gap: 10px;
-      }
+button:hover {
+  background-color: #ddd;
+  border-color: #888;
+  color: #111;
+}
+
+button:focus {
+  outline: none;
+}
+
+/* Room List Styles */
+#liste {
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  max-width: 600px;
+  margin: 0 auto;
+  gap: 8px;
+}
+
+#liste > div {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  align-items: center;
+  gap: 8px;
+  background-color: #f6f6f6;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 8px;
+}
+
+.room {
+  color: #555;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+/* Room Details */
+#roomDetails {
+  margin: 20px auto;
+  padding: 16px;
+  max-width: 600px;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+#roomDetails h3 {
+  margin: 0 0 10px 0;
+  font-size: 18px;
+  color: #333;
+  text-align: center;
+  border-bottom: 2px solid #ddd;
+  padding-bottom: 4px;
+}
+
+#roomDetails p {
+  font-size: 14px;
+  text-align: center;
+  color: #777;
+}
+
+#roomDetails div {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+/* Person Items */
+.professor,
+.student {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #f9f9f9;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.professor {
+  font-weight: bold;
+  color: #333;
+}
+
+.student {
+  font-style: italic;
+  color: #555;
+}
+
+/* Buttons Alignment */
+.professor div,
+.student div {
+  display: flex;
+  gap: 6px;
+}
+
+.professor button,
+.student button {
+  font-size: 12px;
+  border: 1px solid #aaa;
+  background-color: #f6f6f6;
+  color: #333;
+}
+
+.professor button:hover,
+.student button:hover {
+  background-color: #ddd;
+  border-color: #888;
+  color: #111;
+}
+
+/* Buttons Section */
+button#btnAddRoom {
+  background-color: #ddd;
+  color: #333;
+}
+
+button#btnAddRoom:hover {
+  background-color: #bbb;
+}
+
+button#btnAddProf,
+button#btnAddStud {
+  background-color: #fff;
+  color: #333;
+  border: 1px solid #aaa;
+}
+
+button#btnAddProf:hover,
+button#btnAddStud:hover {
+  background-color: #ddd;
+  border-color: #888;
+  color: #111;
+}
+
+
+
+
     </style>
-    <script src="./scripts/classes.js"></script>
     <script lang="js">
-      const persons = [];
+      const rooms = [];
+      let selectedRoom = null;
       let list;
 
-      function clearPersons() {
-          while (list.children.length > 0) {
-              list.removeChild(list.firstChild);
-          }
-      }
+      class Room {
+        constructor(name) {
+          this.name = name;
+          this.persons = [];
+        }
 
-      function displayPersons() {
-          persons.forEach(person => {
-              const listItem = document.createElement('div');
-              const title = document.createElement('span');
-              title.innerText = person.name;
+        direSalle() {
+          return `Bienvenue dans la salle ${this.name}`;
+        }
 
-              if (person instanceof Professor) {
-                listItem.classList.add('professor');
-              }
+        toJSON() {
+          return { name: this.name, persons: this.persons.map(p => p.toJSON()) };
+        }
 
-              if (person instanceof Student) {
-                 listItem.classList.add('student');
-              }
-
-              const button = document.createElement('button');
-
-              button.innerText = 'Bonjour';
-              button.onclick = () => {
-                alert(person.direBonjour());
-                person.name = 'toto';
-              }
-
-              const buttonDel = document.createElement('button');
-              buttonDel.innerText = 'X';
-              buttonDel.onclick = () => {
-                if (confirm(`Êtes-vous sûr.e de vouloir supprimer ${person.name} ?`)) {
-                    persons.splice(persons.indexOf(person), 1);
-                    storePersons();
-                    refreshPersons();
-                }
-              }
-
-              listItem.appendChild(title);
-              listItem.appendChild(button);
-              listItem.appendChild(buttonDel);
-              list.appendChild(listItem);
+        static fromJSON(json) {
+          const room = new Room(json.name);
+          room.persons = json.persons.map(person => {
+            let newPerson;
+            switch (person.type) {
+              case "Professor":
+                newPerson = new Professor();
+                break;
+              case "Student":
+                newPerson = new Student();
+                break;
+            }
+            newPerson.fromJSON(person);
+            return newPerson;
           });
+          return room;
+        }
       }
 
-      function refreshPersons() {
-          clearPersons();
-          displayPersons();
+      class Professor {
+        constructor(name, teaches) {
+          this.name = name;
+          this.teaches = teaches;
+        }
+
+        direBonjour() {
+          return `Bonjour, je suis le professeur ${this.name} et j'enseigne ${this.teaches}.`;
+        }
+
+        toJSON() {
+          return { type: "Professor", name: this.name, teaches: this.teaches };
+        }
+
+        fromJSON(json) {
+          this.name = json.name;
+          this.teaches = json.teaches;
+        }
+      }
+
+      class Student {
+        constructor(name, year) {
+          this.name = name;
+          this.year = year;
+        }
+
+        direBonjour() {
+          return `Bonjour, je suis ${this.name}, en année ${this.year}.`;
+        }
+
+        toJSON() {
+          return { type: "Student", name: this.name, year: this.year };
+        }
+
+        fromJSON(json) {
+          this.name = json.name;
+          this.year = json.year;
+        }
+      }
+
+      function clearList() {
+        while (list.children.length > 0) {
+          list.removeChild(list.firstChild);
+        }
+      }
+
+      function displayRooms() {
+        clearList();
+        rooms.forEach((room, index) => {
+          const listItem = document.createElement("div");
+          const title = document.createElement("span");
+          title.innerText = room.name;
+
+          listItem.classList.add("room");
+
+          const buttonSelect = document.createElement("button");
+          buttonSelect.innerText = "Sélectionner";
+          buttonSelect.onclick = () => {
+            selectedRoom = room;
+            displayRoomDetails();
+          };
+
+          const buttonDel = document.createElement("button");
+          buttonDel.innerText = "X";
+          buttonDel.onclick = () => {
+            if (
+              confirm(
+                `Êtes-vous sûr.e de vouloir supprimer la salle ${room.name} ?`
+              )
+            ) {
+              rooms.splice(index, 1);
+              storeRooms();
+              refreshRoom();
+            }
+          };
+
+          listItem.appendChild(title);
+          listItem.appendChild(buttonSelect);
+          listItem.appendChild(buttonDel);
+          list.appendChild(listItem);
+        });
+      }
+
+      function displayRoomDetails() {
+        const roomDetails = document.getElementById("roomDetails");
+        if (!selectedRoom) {
+          roomDetails.innerText = "Aucune salle sélectionnée.";
+          return;
+        }
+
+        roomDetails.innerHTML = `<h3>Salle : ${selectedRoom.name}</h3>`;
+        const personsContainer = document.createElement("div");
+
+        selectedRoom.persons.forEach((person, index) => {
+          const personItem = document.createElement("div");
+          personItem.classList.add(
+            person instanceof Professor ? "professor" : "student"
+          );
+          personItem.innerText = `${person.name} (${person instanceof Professor ? "Professeur" : "Étudiant"})`;
+
+          const buttonBonjour = document.createElement("button");
+          buttonBonjour.innerText = "Bonjour";
+          buttonBonjour.onclick = () => {
+            alert(person.direBonjour());
+          };
+
+          const buttonDel = document.createElement("button");
+          buttonDel.innerText = "X";
+          buttonDel.onclick = () => {
+            if (
+              confirm(
+                `Êtes-vous sûr.e de vouloir supprimer ${person.name} de la salle ?`
+              )
+            ) {
+              selectedRoom.persons.splice(index, 1);
+              storeRooms();
+              displayRoomDetails();
+            }
+          };
+
+          personItem.appendChild(buttonBonjour);
+          personItem.appendChild(buttonDel);
+          personsContainer.appendChild(personItem);
+        });
+
+        if (selectedRoom.persons.length === 0) {
+          personsContainer.innerHTML = `<p>Aucune personne dans cette salle.</p>`;
+        }
+
+        roomDetails.appendChild(personsContainer);
+      }
+
+      function addRoom() {
+        const name = prompt("Nom de la salle");
+        if (!name) return;
+
+        const room = new Room(name);
+        rooms.push(room);
+        storeRooms();
+        refreshRoom();
       }
 
       function addProfessor() {
-        if (persons.some(person => person instanceof Professor)) {
-            alert('Il existe déjà un professeur dans cette classe');
-            return;
+        if (!selectedRoom) {
+          alert("Veuillez sélectionner une salle.");
+          return;
         }
+        if (
+          selectedRoom.persons.some(person => person instanceof Professor)
+        ) {
+          alert("Il y a déjà un professeur dans la salle");
+          return;
+        }
+        const name = prompt("Nom du professeur");
+        const teaches = prompt("Matière enseignée");
+        if (!name || !teaches) return;
 
-        const name = prompt('Nom du professeur');
-        const teaches = prompt('Matière enseignée');
         const professor = new Professor(name, teaches);
-
-        persons.push(professor);
-        storePersons();
-        refreshPersons();
+        selectedRoom.persons.push(professor);
+        storeRooms();
+        displayRoomDetails();
       }
 
       function addStudent() {
-          const name = prompt('Nom de l\'élève');
-          const year = prompt('Année ?');
-          const student = new Student(name, year);
+        if (!selectedRoom) {
+          alert("Veuillez sélectionner une salle.");
+          return;
+        }
+        const name = prompt("Nom de l'élève");
+        const year = prompt("Année ?");
+        if (!name || !year) return;
 
-          persons.push(student);
-          storePersons();
-          refreshPersons();
+        const student = new Student(name, year);
+        selectedRoom.persons.push(student);
+        storeRooms();
+        displayRoomDetails();
       }
 
-      function personsToJSON() {
-          return persons.map(person => person.toJSON());
+      function storeRooms() {
+        const jsonRooms = rooms.map(r => r.toJSON());
+        localStorage.setItem("rooms", JSON.stringify(jsonRooms));
       }
 
-      function storePersons() {
-          const jsonPersons = personsToJSON();
-          localStorage.setItem('persons', JSON.stringify(jsonPersons));
+      function retrieveRooms() {
+        const strRooms = localStorage.getItem("rooms");
+        if (strRooms) {
+          const jsonRooms = JSON.parse(strRooms);
+          rooms.push(...jsonRooms.map(Room.fromJSON));
+        }
       }
 
-      function retrievePersons() {
-          const strPersons = localStorage.getItem('persons');
-
-          if (strPersons) {
-              const jsonPersons = JSON.parse(strPersons);
-              persons.push(
-                  ...jsonPersons.map(jsonPerson => {
-                      let person;
-
-                      switch (jsonPerson.type) {
-                          case 'Professor':
-                              person = new Professor();
-                              break;
-                          case 'Student':
-                              person = new Student();
-                              break;
-                      }
-
-                      person.fromJSON(jsonPerson);
-                      return person;
-                  })
-              );
-          }
+      function refreshRoom() {
+        displayRooms();
+        displayRoomDetails();
       }
 
       document.addEventListener("DOMContentLoaded", () => {
-          list = document.getElementById('liste');
-          const btnAddProf = document.getElementById('btnAddProf');
-          const btnAddStud = document.getElementById('btnAddStud');
+        list = document.getElementById("liste");
+        const btnAddRoom = document.getElementById("btnAddRoom");
+        const btnAddProf = document.getElementById("btnAddProf");
+        const btnAddStud = document.getElementById("btnAddStud");
 
-          btnAddProf.addEventListener('click', addProfessor);
-          btnAddStud.addEventListener('click', addStudent);
+        btnAddRoom.addEventListener("click", addRoom);
+        btnAddProf.addEventListener("click", addProfessor);
+        btnAddStud.addEventListener("click", addStudent);
 
-          retrievePersons();
-          displayPersons();
+        retrieveRooms();
+        refreshRoom();
       });
     </script>
   </head>
 
   <body>
     <div id="liste"></div>
+    <button id="btnAddRoom">Ajouter une salle</button>
     <button id="btnAddProf">Ajouter un professeur</button>
     <button id="btnAddStud">Ajouter un étudiant</button>
+    <div id="roomDetails"></div>
   </body>
 </html>
